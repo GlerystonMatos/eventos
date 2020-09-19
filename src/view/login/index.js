@@ -2,15 +2,22 @@ import React, { useState } from 'react';
 import './login.css';
 import firebase from '../../config/firebase';
 import 'firebase/auth';
+import { Link, Redirect } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
 
 function Login() {
     const [email, setEmail] = useState();
     const [senha, setSenha] = useState();
     const [msgTipo, setMsgTipo] = useState();
 
+    const dispatch = useDispatch();
+
     function logar() {
         firebase.auth().signInWithEmailAndPassword(email, senha).then(resultado => {
             setMsgTipo('sucesso');
+            setTimeout(() => {
+                dispatch({ type: 'LOG_IN', usuarioEmail: email });
+            }, 2000);            
         }).catch(erro => {
             setMsgTipo('erro');
         });
@@ -18,6 +25,11 @@ function Login() {
 
     return (
         <div className="login-content d-flex align-items-center">
+
+            {
+                useSelector(state => state.usuarioLogado) > 0 ? <Redirect to='/' /> : null
+            }
+
             <form className="form-signin mx-auto">
                 <div className="text-center mb-4">
                     <h1 className="h3 mb-3 font-weight-normal text-white font-weight-bold">Login</h1>
@@ -36,7 +48,7 @@ function Login() {
                 <div className="opcoes-login mt-5 text-center">
                     <a href="#" className="mx-2">Recuperar Senha</a>
                     <span className="text-white">&#9733;</span>
-                    <a href="#" className="mx-2">Quero Cadastrar</a>
+                    <Link to='novousuario' className="mx-2">Quero Cadastrar</Link>
                 </div>
             </form>
         </div>
