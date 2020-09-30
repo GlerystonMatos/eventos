@@ -1,4 +1,4 @@
-.rodape-card{
+.rodape-card {
     color: #614EA6;
     height: 35px;
 }
@@ -21,4 +21,8 @@
 .img-cartao {
     max-height: 100px;
     min-width: 100%;
+}
+
+.titulo, .visualizacoes {
+    color: #614EA6;
 }
