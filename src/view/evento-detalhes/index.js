@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './evento-detalhes.css';
 import firebase from '../../config/firebase';
 import 'firebase/auth';
-import { Link } from 'react-router-dom';
+import { Link, Redirect } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import Navbar from '../../componentes/navbar';
 
@@ -11,20 +11,40 @@ function EventoDetalhes(props) {
     const [urlImg, setUrlImg] = useState();
     const usuarioLogado = useSelector(state => state.usuarioEmail);
     const [carregando, setCarregando] = useState(1);
+    const [excluido, setExcluido] = useState(0);
+
+    function remover() {
+        firebase.firestore().collection('eventos').doc(props.match.params.id).delete().then(() => {
+            setExcluido(1);
+        })
+    }
 
     useEffect(() => {
-        firebase.firestore().collection('eventos').doc(props.match.params.id).get().then(resultado => {
-            setEvento(resultado.data())
+        if (carregando) {
+            firebase.firestore().collection('eventos').doc(props.match.params.id).get().then(resultado => {
+                setEvento(resultado.data())
+                firebase.firestore().collection('eventos').doc(props.match.params.id).update('visualizacoes', resultado.data().visualizacoes + 1)
+                firebase.storage().ref(`imagens/${resultado.data().foto}`).getDownloadURL().then(url => {
+                    setUrlImg(url);
+                    setCarregando(0);
+                });
+            });
+
+        } else {
             firebase.storage().ref(`imagens/${evento.foto}`).getDownloadURL().then(url => {
                 setUrlImg(url);
-                setCarregando(0);
             });
-        });
-    })
+        }
+    }, [])
 
     return (
         <>
             <Navbar />
+
+            {
+                excluido ? <Redirect to='/' /> : null
+            }
+
             <div className="container-fluid">
                 {
                     carregando ?
@@ -38,7 +58,7 @@ function EventoDetalhes(props) {
                             <div className="row">
                                 <img src={urlImg} className="img-banner" alt="Banner" />
                                 <div className="col-12 text-right mt-1 visualizacoes">
-                                    <i class="fas fa-eye"></i> <span>{evento.visualizacoes}</span>
+                                    <i class="fas fa-eye"></i> <span>{evento.visualizacoes + 1}</span>
                                 </div>
                                 <h3 className="mx-auto mt-5 titulo"><strong>{evento.titulo}</strong></h3>
                             </div>
@@ -70,7 +90,13 @@ function EventoDetalhes(props) {
 
                             {
                                 usuarioLogado == evento.usuario ?
-                                    <Link to='' className="btn-editar"><i className="fas fa-pen-square fa-3x"></i></Link> :
+                                    <Link to={`/editarevento/${props.match.params.id}`} className="btn-editar"><i className="fas fa-pen-square fa-3x"></i></Link> :
+                                    ''
+                            }
+
+                            {
+                                usuarioLogado == evento.usuario ?
+                                    <button onClick={remover} type="button" className="btn btn-lg btn-block mt-3 mb-5 btn-cadastro">Remover Evento</button> :
                                     ''
                             }
 
